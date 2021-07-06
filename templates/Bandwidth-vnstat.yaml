@@ -1,0 +1,1213 @@
+zabbix_export:
+  version: '5.4'
+  date: '2021-07-06T09:22:46Z'
+  groups:
+    -
+      uuid: 57b7ae836ca64446ba2c296389c009b7
+      name: Templates/Modules
+  templates:
+    -
+      uuid: ef3793780ec447dbbdcccad14f2bf562
+      template: 'Bandwidth by vnstat - Active Agent'
+      name: 'Bandwidth by vnstat - Active Agent'
+      groups:
+        -
+          name: Templates/Modules
+      items:
+        -
+          uuid: e01355d0c16d43b4badaa6bdc88341ac
+          name: bandwidth.vnstat.discovery
+          type: ZABBIX_ACTIVE
+          key: bandwidth.vnstat.discovery
+          delay: 1h
+          history: 1d
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: STR_REPLACE
+              parameters:
+                - 'Available interfaces: '
+                - ''
+            -
+              type: STR_REPLACE
+              parameters:
+                - ' '
+                - ','
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  
+                  var lld = [];
+                  var lines = value.split(",");
+                  var lines_num = lines.length;
+                  for (i = 0; i < lines_num; i++)
+                  {
+                    var row = {};
+                    row["{#INT}"] = lines[i]
+                    lld.push(row);
+                  }
+                  return JSON.stringify(lld);
+                  
+          tags:
+            -
+              tag: Application
+              value: vnstat
+            -
+              tag: vnstat
+              value: discovery
+        -
+          uuid: 3cce90f888624fa1873fcf340abd1855
+          name: bandwidth.vnstat.discovery.int.count
+          type: DEPENDENT
+          key: bandwidth.vnstat.discovery.int.count
+          delay: '0'
+          history: 1d
+          trends: 1d
+          units: interfaces
+          preprocessing:
+            -
+              type: STR_REPLACE
+              parameters:
+                - '{#INT}'
+                - int
+            -
+              type: JSONPATH
+              parameters:
+                - $..int.length()
+          master_item:
+            key: bandwidth.vnstat.discovery
+          triggers:
+            -
+              uuid: 0588fba60ec0404eb2d0e574be10f113
+              expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.discovery.int.count)=0'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.discovery.int.count)>0'
+              name: 'Zero vnstat Bandwidth Monitor Interlaces Discovered'
+              event_name: 'Zero vnstat Bandwidth Monitor Interlaces Discovered'
+              opdata: '{ITEM.LASTVALUE1} Interfaces'
+              priority: INFO
+              description: |
+                Zero interfaces were found by discovery using vnstat.
+                
+                NOTE, discovery uses vnstat --ifstats for discovery.
+                
+                Have you enabled and configured vnstat?
+              manual_close: 'YES'
+      discovery_rules:
+        -
+          uuid: 29b5a75e09614615a16c9b065bd6919b
+          name: bandwidth.vnstat.discovery.lld
+          type: DEPENDENT
+          key: bandwidth.vnstat.discovery.lld
+          delay: '0'
+          item_prototypes:
+            -
+              uuid: bf99485d25eb47e18a58f93129c3c117
+              name: 'bandwidth.vnstat.data.{#INT}'
+              type: ZABBIX_ACTIVE
+              key: 'bandwidth.vnstat.data[{#INT}]'
+              history: 1d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Receive
+            -
+              uuid: 34ff493b859e42bcb457cb58a60e9fbc
+              name: 'Bandwidth {#INT} Day RX'
+              type: DEPENDENT
+              key: 'bandwidth.vnstat.[{#INT}.day.rx]'
+              delay: '0'
+              value_type: FLOAT
+              units: Mb
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - ;
+                    - ','
+                -
+                  type: CSV_TO_JSON
+                  parameters:
+                    - ''
+                    - ''
+                    - '0'
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $..4.first()
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.00000095367431641'
+              master_item:
+                key: 'bandwidth.vnstat.data[{#INT}]'
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Receive
+              trigger_prototypes:
+                -
+                  uuid: 2877f31f65fc411ca6f74eb4dcc32f72
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])>{$BANDWIDTH_DAY_RX_ALERT}*.5'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])<{$BANDWIDTH_DAY_RX_ALERT}*.5'
+                  name: 'Bandwidth {#INT} RX Day 50% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} RX Day 50% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_RX_ALERT} Mb'
+                  priority: INFO
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_DAY_RX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert50
+                    -
+                      tag: Bandwidth
+                      value: DayRXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: efd6b767964546d2b3bf24b618969c96
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])>{$BANDWIDTH_DAY_RX_ALERT}*.75'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])<{$BANDWIDTH_DAY_RX_ALERT}*.75'
+                  name: 'Bandwidth {#INT} RX Day 75% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} RX Day 75% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_RX_ALERT} Mb'
+                  priority: WARNING
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {#INT}
+                    
+                    Current Bandwidth: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_DAY_RX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert75
+                    -
+                      tag: Bandwidth
+                      value: DayRXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: a78643d2b73a4b1fad3a1168c832fbe5
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])>{$BANDWIDTH_DAY_RX_ALERT}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])<{$BANDWIDTH_DAY_RX_ALERT}'
+                  name: 'Bandwidth {#INT} RX Day 100% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} RX Day 100% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_RX_ALERT} Mb'
+                  priority: HIGH
+                  description: |
+                    System: {HOST.HOST} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_DAY_RX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert100
+                    -
+                      tag: Bandwidth
+                      value: DayRXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+            -
+              uuid: 3b7564f7b26149f4a1b65077094c8054
+              name: 'Bandwidth {#INT} Day TTL'
+              type: DEPENDENT
+              key: 'bandwidth.vnstat.[{#INT}.day.ttl]'
+              delay: '0'
+              value_type: FLOAT
+              units: Mb
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - ;
+                    - ','
+                -
+                  type: CSV_TO_JSON
+                  parameters:
+                    - ''
+                    - ''
+                    - '0'
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $..6.first()
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.00000095367431641'
+              master_item:
+                key: 'bandwidth.vnstat.data[{#INT}]'
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Total
+              trigger_prototypes:
+                -
+                  uuid: 4b27fc108442446ba5f8c7f68662438f
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])>{$BANDWIDTH_DAY_TTL_ALERT}*.5'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])<{$BANDWIDTH_DAY_TTL_ALERT}*.5'
+                  name: 'Bandwidth {#INT} TTL Day 50% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TTL Day 50% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb'
+                  priority: INFO
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_DAY_TTL_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert50
+                    -
+                      tag: Bandwidth
+                      value: DayTTLLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: 8b789ae9c79148078badc2ad8aa7cb98
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])>{$BANDWIDTH_DAY_TTL_ALERT}*.75'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])<{$BANDWIDTH_DAY_TTL_ALERT}*.75'
+                  name: 'Bandwidth {#INT} TTL Day 75% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TTL Day 75% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb'
+                  priority: WARNING
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {#INT}
+                    
+                    Current Bandwidth: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_DAY_TTL_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert75
+                    -
+                      tag: Bandwidth
+                      value: DayTTLLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: 55e3cae14cb5470f9d862e1833687349
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])>{$BANDWIDTH_DAY_TTL_ALERT}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])<{$BANDWIDTH_DAY_TTL_ALERT}'
+                  name: 'Bandwidth {#INT} TTL Day 100% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TTL Day 100% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb'
+                  priority: HIGH
+                  description: |
+                    System: {HOST.HOST} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_DAY_TTL_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert100
+                    -
+                      tag: Bandwidth
+                      value: DayTTLLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+            -
+              uuid: f4441c7dd18e4d8983813628945e4072
+              name: 'Bandwidth {#INT} Day TX'
+              type: DEPENDENT
+              key: 'bandwidth.vnstat.[{#INT}.day.tx]'
+              delay: '0'
+              value_type: FLOAT
+              units: Mb
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - ;
+                    - ','
+                -
+                  type: CSV_TO_JSON
+                  parameters:
+                    - ''
+                    - ''
+                    - '0'
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $..5.first()
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.00000095367431641'
+              master_item:
+                key: 'bandwidth.vnstat.data[{#INT}]'
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Transmit
+              trigger_prototypes:
+                -
+                  uuid: d4af8f0fed5d4484a13c016a80a4ce2c
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])>{$BANDWIDTH_DAY_TX_ALERT}*.5'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])<{$BANDWIDTH_DAY_TX_ALERT}*.5'
+                  name: 'Bandwidth {#INT} TX Day 50% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TX Day 50% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TX_ALERT} Mb'
+                  priority: INFO
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_DAY_TX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert50
+                    -
+                      tag: Bandwidth
+                      value: DayTXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: 87c834cfa18c4accb43b0ea91c296d63
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])>{$BANDWIDTH_DAY_TX_ALERT}*.75'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])<{$BANDWIDTH_DAY_TX_ALERT}*.75'
+                  name: 'Bandwidth {#INT} TX Day 75% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TX Day 75% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TX_ALERT} Mb'
+                  priority: WARNING
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {#INT}
+                    
+                    Current Bandwidth: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_DAY_TX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert75
+                    -
+                      tag: Bandwidth
+                      value: DayTXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: 8ba47eea45ef4645a82bccb4fe058c4a
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])>{$BANDWIDTH_DAY_TX_ALERT}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])<{$BANDWIDTH_DAY_TX_ALERT}'
+                  name: 'Bandwidth {#INT} TX Day 100% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TX Day 100% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TX_ALERT} Mb'
+                  priority: HIGH
+                  description: |
+                    System: {HOST.HOST} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_DAY_TX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert100
+                    -
+                      tag: Bandwidth
+                      value: DayTXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+            -
+              uuid: 275f2d3f385d489b9521e24faa474420
+              name: 'Bandwidth {#INT} Ever RX'
+              type: DEPENDENT
+              key: 'bandwidth.vnstat.[{#INT}.ever.rx]'
+              delay: '0'
+              history: 365d
+              trends: 999d
+              value_type: FLOAT
+              units: Mb
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - ;
+                    - ','
+                -
+                  type: CSV_TO_JSON
+                  parameters:
+                    - ''
+                    - ''
+                    - '0'
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $..13.first()
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.00000095367431641'
+              master_item:
+                key: 'bandwidth.vnstat.data[{#INT}]'
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Receive
+            -
+              uuid: 1d8138357a8446b9a16ff8acdd5320b8
+              name: 'Bandwidth {#INT} Ever TTL'
+              type: DEPENDENT
+              key: 'bandwidth.vnstat.[{#INT}.ever.ttl]'
+              delay: '0'
+              history: 365d
+              trends: 999d
+              value_type: FLOAT
+              units: Mb
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - ;
+                    - ','
+                -
+                  type: CSV_TO_JSON
+                  parameters:
+                    - ''
+                    - ''
+                    - '0'
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $..15.first()
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.00000095367431641'
+              master_item:
+                key: 'bandwidth.vnstat.data[{#INT}]'
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Total
+            -
+              uuid: d9b410be25754436a00980fe5a158c0d
+              name: 'Bandwidth {#INT} Ever TX'
+              type: DEPENDENT
+              key: 'bandwidth.vnstat.[{#INT}.ever.tx]'
+              delay: '0'
+              history: 365d
+              trends: 999d
+              value_type: FLOAT
+              units: Mb
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - ;
+                    - ','
+                -
+                  type: CSV_TO_JSON
+                  parameters:
+                    - ''
+                    - ''
+                    - '0'
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $..14.first()
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.00000095367431641'
+              master_item:
+                key: 'bandwidth.vnstat.data[{#INT}]'
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Transmit
+            -
+              uuid: 765cd1c9540b4cacaf58a22014a5b15f
+              name: 'Bandwidth {#INT} Month RX'
+              type: DEPENDENT
+              key: 'bandwidth.vnstat.[{#INT}.month.rx]'
+              delay: '0'
+              history: 365d
+              trends: 730d
+              value_type: FLOAT
+              units: Mb
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - ;
+                    - ','
+                -
+                  type: CSV_TO_JSON
+                  parameters:
+                    - ''
+                    - ''
+                    - '0'
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $..9.first()
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.00000095367431641'
+              master_item:
+                key: 'bandwidth.vnstat.data[{#INT}]'
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Receive
+              trigger_prototypes:
+                -
+                  uuid: 30cbc5c624394a8b90dfa1b67be52876
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])>{$BANDWIDTH_MONTH_RX_ALERT}*.5'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])<{$BANDWIDTH_MONTH_RX_ALERT}*.5'
+                  name: 'Bandwidth {#INT} RX Monthly 50% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} RX Monthly 50% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_RX_ALERT} Mb'
+                  priority: INFO
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_MONTH_RX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert50
+                    -
+                      tag: Bandwidth
+                      value: MonthRXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: 97d33f0494624576b2a05c94ea9907cb
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])>{$BANDWIDTH_MONTH_RX_ALERT}*.75'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])<{$BANDWIDTH_MONTH_RX_ALERT}*.75'
+                  name: 'Bandwidth {#INT} RX Monthly 75% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} RX Monthly 75% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_RX_ALERT} Mb'
+                  priority: WARNING
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {#INT}
+                    
+                    Current Bandwidth: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_MONTH_RX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert75
+                    -
+                      tag: Bandwidth
+                      value: MonthRXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: cce775a14ea7482b99054433518f4f6b
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])>{$BANDWIDTH_MONTH_RX_ALERT}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])<{$BANDWIDTH_MONTH_RX_ALERT}'
+                  name: 'Bandwidth {#INT} RX Monthly 100% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} RX Monthly 100% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_RX_ALERT} Mb'
+                  priority: HIGH
+                  description: |
+                    System: {HOST.HOST} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_MONTH_RX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert100
+                    -
+                      tag: Bandwidth
+                      value: MonthRXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+            -
+              uuid: 5144e8849623427183ca768ddf2a1dac
+              name: 'Bandwidth {#INT} Month TTL'
+              type: DEPENDENT
+              key: 'bandwidth.vnstat.[{#INT}.month.ttl]'
+              delay: '0'
+              history: 365d
+              trends: 730d
+              value_type: FLOAT
+              units: Mb
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - ;
+                    - ','
+                -
+                  type: CSV_TO_JSON
+                  parameters:
+                    - ''
+                    - ''
+                    - '0'
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $..11.first()
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.00000095367431641'
+              master_item:
+                key: 'bandwidth.vnstat.data[{#INT}]'
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Total
+              trigger_prototypes:
+                -
+                  uuid: e7b4ba927990420d9ed67e79f78ef6a5
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])>{$BANDWIDTH_MONTH_TTL_ALERT}*.5'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])<{$BANDWIDTH_MONTH_TTL_ALERT}*.5'
+                  name: 'Bandwidth {#INT} TTL Monthly 50% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TTL Monthly 50% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_TTL_ALERT} Mb'
+                  priority: INFO
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_MONTH_TTL_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert50
+                    -
+                      tag: Bandwidth
+                      value: MonthTTLLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: 60a0f295581042a5b3e96ead86a91148
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])>{$BANDWIDTH_MONTH_TTL_ALERT}*.75'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])<{$BANDWIDTH_MONTH_TTL_ALERT}*.75'
+                  name: 'Bandwidth {#INT} TTL Monthly 75% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TTL Monthly 75% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb'
+                  priority: WARNING
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {#INT}
+                    
+                    Current Bandwidth: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_MONTH_TTL_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert75
+                    -
+                      tag: Bandwidth
+                      value: MonthTTLLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: 1d4997f5fb984538aa35c1fd8f214c5c
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])>{$BANDWIDTH_MONTH_TTL_ALERT}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])<{$BANDWIDTH_MONTH_TTL_ALERT}'
+                  name: 'Bandwidth {#INT} TTL Monthly 100% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TTL Monthly 100% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb'
+                  priority: HIGH
+                  description: |
+                    System: {HOST.HOST} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_MONTH_TTL_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert100
+                    -
+                      tag: Bandwidth
+                      value: MonthTTLLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+            -
+              uuid: 655427b3eeb3460eaa3d96643abab8fd
+              name: 'Bandwidth {#INT} Month TX'
+              type: DEPENDENT
+              key: 'bandwidth.vnstat.[{#INT}.month.tx]'
+              delay: '0'
+              history: 365d
+              trends: 730d
+              value_type: FLOAT
+              units: Mb
+              preprocessing:
+                -
+                  type: STR_REPLACE
+                  parameters:
+                    - ;
+                    - ','
+                -
+                  type: CSV_TO_JSON
+                  parameters:
+                    - ''
+                    - ''
+                    - '0'
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $..10.first()
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '0.00000095367431641'
+              master_item:
+                key: 'bandwidth.vnstat.data[{#INT}]'
+              tags:
+                -
+                  tag: Bandwidth
+                  value: Transmit
+              trigger_prototypes:
+                -
+                  uuid: 5143974fe3d4458eb881782499837c71
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])>{$BANDWIDTH_MONTH_TX_ALERT}*.5'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])<{$BANDWIDTH_MONTH_TX_ALERT}*.5'
+                  name: 'Bandwidth {#INT} TX Monthly 50% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TX Monthly 50% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_TX_ALERT} Mb'
+                  priority: INFO
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_MONTH_TX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert50
+                    -
+                      tag: Bandwidth
+                      value: MonthTXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: 1509ef2050114189a18aba09f596ae70
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])>{$BANDWIDTH_MONTH_TX_ALERT}*.75'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])<{$BANDWIDTH_MONTH_TX_ALERT}*.75'
+                  name: 'Bandwidth {#INT} TX Monthly 75% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TX Monthly 75% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_TX_ALERT} Mb'
+                  priority: WARNING
+                  description: |
+                    System: {HOSTNAME} 
+                    Interface {#INT}
+                    
+                    Current Bandwidth: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_MONTH_TX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert75
+                    -
+                      tag: Bandwidth
+                      value: MonthTXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+                -
+                  uuid: 03c57af08180404fa9c227756c361a9e
+                  expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])>{$BANDWIDTH_MONTH_TX_ALERT}'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])<{$BANDWIDTH_MONTH_TX_ALERT}'
+                  name: 'Bandwidth {#INT} TX Monthly 100% Limit Exceeded'
+                  event_name: 'Bandwidth {#INT} TX Monthly 100% Limit Exceeded'
+                  opdata: '{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_TX_ALERT} Mb'
+                  priority: HIGH
+                  description: |
+                    System: {HOST.HOST} 
+                    Interface {EVENT.TAGS.BandwidthInt} 
+                    
+                    
+                    Current Bandwidth RX: {ITEM.VALUE1}
+                    Limit: {$BANDWIDTH_MONTH_TX_ALERT}
+                  manual_close: 'YES'
+                  tags:
+                    -
+                      tag: Bandwidth
+                      value: Alert100
+                    -
+                      tag: Bandwidth
+                      value: MonthTXLimit
+                    -
+                      tag: BandwidthInt
+                      value: '{#INT}'
+          graph_prototypes:
+            -
+              uuid: f3a1803efe014959b51be380f2888746
+              name: 'Daily {#INT} Bandiwdth'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.day.rx]'
+                -
+                  sortorder: '2'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.day.ttl]'
+                -
+                  sortorder: '3'
+                  color: 2774A4
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.day.tx]'
+            -
+              uuid: d32fd4f52268466c9b7b9ca56982382d
+              name: 'Daily {#INT} Bandiwdth RX'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.day.rx]'
+            -
+              uuid: 4c527574857a40e4951d95f10c06b1c3
+              name: 'Daily {#INT} Bandiwdth Stacked'
+              type: STACKED
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.day.rx]'
+                -
+                  sortorder: '2'
+                  color: 2774A4
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.day.tx]'
+            -
+              uuid: 0cb226269fc542eeb8c5b3f6db8047fb
+              name: 'Daily {#INT} Bandiwdth TTL'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: A54F10
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.day.ttl]'
+            -
+              uuid: c5e1f35a4706413291e8d17704acc8db
+              name: 'Daily {#INT} Bandiwdth TX'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.day.tx]'
+            -
+              uuid: c8f70cc65f2d411da0690e3e29963f3b
+              name: 'Ever {#INT} Bandiwdth'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.ever.tx]'
+                -
+                  sortorder: '2'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.ever.rx]'
+                -
+                  sortorder: '3'
+                  color: A54F10
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.ever.ttl]'
+            -
+              uuid: e83d39fdf9174e89952fab0c19ea3c84
+              name: 'Ever {#INT} Bandiwdth RX'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.ever.rx]'
+            -
+              uuid: b8edc18cde4b4e7689df2a6ce7fa0db2
+              name: 'Ever {#INT} Bandiwdth Stacked'
+              type: STACKED
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.ever.tx]'
+                -
+                  sortorder: '2'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.ever.rx]'
+            -
+              uuid: 4d2403704d9946ccbc1fedde00a9beae
+              name: 'Ever {#INT} Bandiwdth TTL'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: A54F10
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.ever.ttl]'
+            -
+              uuid: c7fb5fcddde84833a945ad1e648669f0
+              name: 'Ever {#INT} Bandiwdth TX'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.ever.tx]'
+            -
+              uuid: e4c2742e0eb54926bb79c69d88489523
+              name: 'Monthly {#INT} Bandiwdth'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.month.tx]'
+                -
+                  sortorder: '2'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.month.rx]'
+                -
+                  sortorder: '3'
+                  color: 2774A4
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.ever.ttl]'
+            -
+              uuid: c5fe94d998b74a35a6e0e192cc2c81f0
+              name: 'Monthly {#INT} Bandiwdth RX'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.month.rx]'
+            -
+              uuid: 87d50189c85142a8b506e4dd0f901dee
+              name: 'Monthly {#INT} Bandiwdth Stacked'
+              type: STACKED
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.month.tx]'
+                -
+                  sortorder: '2'
+                  color: F63100
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.month.rx]'
+            -
+              uuid: 625aca417f134207a508e7bc5f792ada
+              name: 'Monthly {#INT} Bandiwdth TTL'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: A54F10
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.month.ttl]'
+            -
+              uuid: fad53b8fe5b3436cb6810c72dfb796c1
+              name: 'Monthly {#INT} Bandiwdth TX'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 1A7C11
+                  item:
+                    host: 'Bandwidth by vnstat - Active Agent'
+                    key: 'bandwidth.vnstat.[{#INT}.month.tx]'
+          master_item:
+            key: bandwidth.vnstat.discovery
+      macros:
+        -
+          macro: '{$BANDWIDTH_DAY_RX_ALERT}'
+          value: '9999999'
+          description: 'Trigger alert when interface total daily receive bandwidth exceeds (Mb)'
+        -
+          macro: '{$BANDWIDTH_DAY_TTL_ALERT}'
+          value: '9999999'
+          description: 'Trigger alert when interface total daily bandwidth exceeds (Mb)'
+        -
+          macro: '{$BANDWIDTH_DAY_TX_ALERT}'
+          value: '9999999'
+          description: 'Trigger alert when interface total daily transmit bandwidth exceeds (Mb)'
+        -
+          macro: '{$BANDWIDTH_EVER_RX_ALERT}'
+          value: '9999999'
+          description: 'Trigger alert when interface total receive bandwidth exceeds (Mb)'
+        -
+          macro: '{$BANDWIDTH_EVER_TTL_ALERT}'
+          value: '9999999'
+          description: 'Trigger alert when interface total bandwidth exceeds  (Mb)'
+        -
+          macro: '{$BANDWIDTH_EVER_TX_ALERT}'
+          value: '9999999'
+          description: 'Trigger alert when interface total transmit bandwidth exceeds (Mb)'
+        -
+          macro: '{$BANDWIDTH_MONTH_RX_ALERT}'
+          value: '9999999'
+          description: 'Trigger alert when interface total monthly receive bandwidth exceeds (Mb)'
+        -
+          macro: '{$BANDWIDTH_MONTH_TTL_ALERT}'
+          value: '9999999'
+          description: 'Trigger alert when interface total monthly bandwidth exceeds (Mb)'
+        -
+          macro: '{$BANDWIDTH_MONTH_TX_ALERT}'
+          value: '9999999'
+          description: 'Trigger alert when interface total monthly transmit bandwidth exceeds (Mb)'
+      dashboards:
+        -
+          uuid: 4e0c8359eab64f1793a374a8553e7f7f
+          name: 'New dashboard'
+          pages:
+            -
+              widgets:
+                -
+                  type: GRAPH_PROTOTYPE
+                  name: 'Bandwidth Stacked - Daily'
+                  width: '19'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        name: 'Daily {#INT} Bandiwdth Stacked'
+                        host: 'Bandwidth by vnstat - Active Agent'
+                -
+                  type: GRAPH_PROTOTYPE
+                  name: 'Bandwidth Stacked - Ever'
+                  'y': '10'
+                  width: '19'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        name: 'Ever {#INT} Bandiwdth Stacked'
+                        host: 'Bandwidth by vnstat - Active Agent'
+                -
+                  type: GRAPH_PROTOTYPE
+                  name: 'Banwidth Stacked - Monthly'
+                  'y': '5'
+                  width: '19'
+                  height: '5'
+                  fields:
+                    -
+                      type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        name: 'Monthly {#INT} Bandiwdth Stacked'
+                        host: 'Bandwidth by vnstat - Active Agent'
