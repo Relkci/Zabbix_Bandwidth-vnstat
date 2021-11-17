@@ -69,10 +69,11 @@ Dashboard Screenshot (Monthly Bandwidth Stacked)
 Problem Alert Showing Bandwidth Limits (Operational Data)
 ![](images/Screenshot3.png)
 
-## Last Update
-October 1, 2021
+## Updates
+### October 1, 2021
 - bug fixes
-November 17, 2021
+
+### November 17, 2021
 - Added XML for pre 5.4
 
 ## Known Issues
