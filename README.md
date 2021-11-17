@@ -72,6 +72,11 @@ Problem Alert Showing Bandwidth Limits (Operational Data)
 ## Last Update
 October 1, 2021
 - bug fixes
+November 17, 2021
+- Added XML for pre 5.4
+
+## Known Issues
+- LLD does not filter for invalid interface names.  This will be addressed in future release
 
 # Contact
 - Twitter: @KRelkci
