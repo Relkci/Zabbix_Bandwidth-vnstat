@@ -1,0 +1,1834 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.4</version>
+    <date>2021-11-17T20:59:03Z</date>
+    <groups>
+        <group>
+            <uuid>57b7ae836ca64446ba2c296389c009b7</uuid>
+            <name>Templates/Modules</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <uuid>ef3793780ec447dbbdcccad14f2bf562</uuid>
+            <template>Bandwidth by vnstat - Active Agent</template>
+            <name>Bandwidth by vnstat - Active Agent</name>
+            <groups>
+                <group>
+                    <name>Templates/Modules</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <uuid>e01355d0c16d43b4badaa6bdc88341ac</uuid>
+                    <name>bandwidth.vnstat.discovery</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>bandwidth.vnstat.discovery</key>
+                    <delay>1h</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <preprocessing>
+                        <step>
+                            <type>STR_REPLACE</type>
+                            <parameters>
+                                <parameter>Available interfaces: </parameter>
+                                <parameter/>
+                            </parameters>
+                        </step>
+                        <step>
+                            <type>STR_REPLACE</type>
+                            <parameters>
+                                <parameter><![CDATA[ ]]></parameter>
+                                <parameter>,</parameter>
+                            </parameters>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <parameters>
+                                <parameter>
+var lld = [];
+var lines = value.split(&quot;,&quot;);
+var lines_num = lines.length;
+for (i = 0; i &lt; lines_num; i++)
+{
+  var row = {};
+  row[&quot;{#INT}&quot;] = lines[i]
+  lld.push(row);
+}
+return JSON.stringify(lld);
+</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <tags>
+                        <tag>
+                            <tag>Application</tag>
+                            <value>vnstat</value>
+                        </tag>
+                        <tag>
+                            <tag>vnstat</tag>
+                            <value>discovery</value>
+                        </tag>
+                    </tags>
+                </item>
+                <item>
+                    <uuid>3cce90f888624fa1873fcf340abd1855</uuid>
+                    <name>bandwidth.vnstat.discovery.int.count</name>
+                    <type>DEPENDENT</type>
+                    <key>bandwidth.vnstat.discovery.int.count</key>
+                    <delay>0</delay>
+                    <history>1d</history>
+                    <trends>1d</trends>
+                    <units>interfaces</units>
+                    <preprocessing>
+                        <step>
+                            <type>STR_REPLACE</type>
+                            <parameters>
+                                <parameter>{#INT}</parameter>
+                                <parameter>int</parameter>
+                            </parameters>
+                        </step>
+                        <step>
+                            <type>JSONPATH</type>
+                            <parameters>
+                                <parameter>$..int.length()</parameter>
+                            </parameters>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>bandwidth.vnstat.discovery</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <uuid>0588fba60ec0404eb2d0e574be10f113</uuid>
+                            <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.discovery.int.count)=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.discovery.int.count)&gt;0</recovery_expression>
+                            <name>Zero vnstat Bandwidth Monitor Interlaces Discovered</name>
+                            <event_name>Zero vnstat Bandwidth Monitor Interlaces Discovered</event_name>
+                            <opdata>{ITEM.LASTVALUE1} Interfaces</opdata>
+                            <priority>INFO</priority>
+                            <description>Zero interfaces were found by discovery using vnstat.
+
+NOTE, discovery uses vnstat --ifstats for discovery.
+
+Have you enabled and configured vnstat?</description>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <uuid>29b5a75e09614615a16c9b065bd6919b</uuid>
+                    <name>bandwidth.vnstat.discovery.lld</name>
+                    <type>DEPENDENT</type>
+                    <key>bandwidth.vnstat.discovery.lld</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <uuid>bf99485d25eb47e18a58f93129c3c117</uuid>
+                            <name>bandwidth.vnstat.data.{#INT}</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>bandwidth.vnstat.data[{#INT}]</key>
+                            <delay>5m</delay>
+                            <history>1d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <preprocessing>
+                                <step>
+                                    <type>DISCARD_UNCHANGED</type>
+                                    <parameters>
+                                        <parameter/>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Receive</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>34ff493b859e42bcb457cb58a60e9fbc</uuid>
+                            <name>Bandwidth {#INT} Day RX</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.day.rx]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>;</parameter>
+                                        <parameter>,</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>CSV_TO_JSON</type>
+                                    <parameters>
+                                        <parameter/>
+                                        <parameter/>
+                                        <parameter>0</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..4.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.data[{#INT}]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Receive</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>2877f31f65fc411ca6f74eb4dcc32f72</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])&gt;{$BANDWIDTH_DAY_RX_ALERT}*.5</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])&lt;{$BANDWIDTH_DAY_RX_ALERT}*.5</recovery_expression>
+                                    <name>Bandwidth {#INT} RX Day 50% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} RX Day 50% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_RX_ALERT} Mb</opdata>
+                                    <priority>INFO</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_DAY_RX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert50</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>DayRXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>efd6b767964546d2b3bf24b618969c96</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])&gt;{$BANDWIDTH_DAY_RX_ALERT}*.75</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])&lt;{$BANDWIDTH_DAY_RX_ALERT}*.75</recovery_expression>
+                                    <name>Bandwidth {#INT} RX Day 75% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} RX Day 75% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_RX_ALERT} Mb</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {#INT}
+
+Current Bandwidth: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_DAY_RX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert75</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>DayRXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>a78643d2b73a4b1fad3a1168c832fbe5</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])&gt;{$BANDWIDTH_DAY_RX_ALERT}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.rx])&lt;{$BANDWIDTH_DAY_RX_ALERT}</recovery_expression>
+                                    <name>Bandwidth {#INT} RX Day 100% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} RX Day 100% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_RX_ALERT} Mb</opdata>
+                                    <priority>HIGH</priority>
+                                    <description>System: {HOST.HOST} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_DAY_RX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert100</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>DayRXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>3b7564f7b26149f4a1b65077094c8054</uuid>
+                            <name>Bandwidth {#INT} Day TTL</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.day.ttl]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>;</parameter>
+                                        <parameter>,</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>CSV_TO_JSON</type>
+                                    <parameters>
+                                        <parameter/>
+                                        <parameter/>
+                                        <parameter>0</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..6.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.data[{#INT}]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Total</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>4b27fc108442446ba5f8c7f68662438f</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])&gt;{$BANDWIDTH_DAY_TTL_ALERT}*.5</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])&lt;{$BANDWIDTH_DAY_TTL_ALERT}*.5</recovery_expression>
+                                    <name>Bandwidth {#INT} TTL Day 50% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TTL Day 50% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb</opdata>
+                                    <priority>INFO</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_DAY_TTL_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert50</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>DayTTLLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>8b789ae9c79148078badc2ad8aa7cb98</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])&gt;{$BANDWIDTH_DAY_TTL_ALERT}*.75</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])&lt;{$BANDWIDTH_DAY_TTL_ALERT}*.75</recovery_expression>
+                                    <name>Bandwidth {#INT} TTL Day 75% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TTL Day 75% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {#INT}
+
+Current Bandwidth: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_DAY_TTL_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert75</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>DayTTLLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>55e3cae14cb5470f9d862e1833687349</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])&gt;{$BANDWIDTH_DAY_TTL_ALERT}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.ttl])&lt;{$BANDWIDTH_DAY_TTL_ALERT}</recovery_expression>
+                                    <name>Bandwidth {#INT} TTL Day 100% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TTL Day 100% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb</opdata>
+                                    <priority>HIGH</priority>
+                                    <description>System: {HOST.HOST} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_DAY_TTL_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert100</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>DayTTLLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>f4441c7dd18e4d8983813628945e4072</uuid>
+                            <name>Bandwidth {#INT} Day TX</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.day.tx]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>;</parameter>
+                                        <parameter>,</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>CSV_TO_JSON</type>
+                                    <parameters>
+                                        <parameter/>
+                                        <parameter/>
+                                        <parameter>0</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..5.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.data[{#INT}]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Transmit</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>d4af8f0fed5d4484a13c016a80a4ce2c</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])&gt;{$BANDWIDTH_DAY_TX_ALERT}*.5</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])&lt;{$BANDWIDTH_DAY_TX_ALERT}*.5</recovery_expression>
+                                    <name>Bandwidth {#INT} TX Day 50% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TX Day 50% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TX_ALERT} Mb</opdata>
+                                    <priority>INFO</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_DAY_TX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert50</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>DayTXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>87c834cfa18c4accb43b0ea91c296d63</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])&gt;{$BANDWIDTH_DAY_TX_ALERT}*.75</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])&lt;{$BANDWIDTH_DAY_TX_ALERT}*.75</recovery_expression>
+                                    <name>Bandwidth {#INT} TX Day 75% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TX Day 75% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TX_ALERT} Mb</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {#INT}
+
+Current Bandwidth: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_DAY_TX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert75</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>DayTXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>8ba47eea45ef4645a82bccb4fe058c4a</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])&gt;{$BANDWIDTH_DAY_TX_ALERT}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.day.tx])&lt;{$BANDWIDTH_DAY_TX_ALERT}</recovery_expression>
+                                    <name>Bandwidth {#INT} TX Day 100% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TX Day 100% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TX_ALERT} Mb</opdata>
+                                    <priority>HIGH</priority>
+                                    <description>System: {HOST.HOST} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_DAY_TX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert100</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>DayTXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>275f2d3f385d489b9521e24faa474420</uuid>
+                            <name>Bandwidth {#INT} All time RX</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.ever.rx]</key>
+                            <delay>0</delay>
+                            <history>365d</history>
+                            <trends>999d</trends>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>;</parameter>
+                                        <parameter>,</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>CSV_TO_JSON</type>
+                                    <parameters>
+                                        <parameter/>
+                                        <parameter/>
+                                        <parameter>0</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..13.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.data[{#INT}]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Receive</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>1d8138357a8446b9a16ff8acdd5320b8</uuid>
+                            <name>Bandwidth {#INT} All time TTL</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.ever.ttl]</key>
+                            <delay>0</delay>
+                            <history>365d</history>
+                            <trends>999d</trends>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>;</parameter>
+                                        <parameter>,</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>CSV_TO_JSON</type>
+                                    <parameters>
+                                        <parameter/>
+                                        <parameter/>
+                                        <parameter>0</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..15.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.data[{#INT}]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Total</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>d9b410be25754436a00980fe5a158c0d</uuid>
+                            <name>Bandwidth {#INT} All time TX</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.ever.tx]</key>
+                            <delay>0</delay>
+                            <history>365d</history>
+                            <trends>999d</trends>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>;</parameter>
+                                        <parameter>,</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>CSV_TO_JSON</type>
+                                    <parameters>
+                                        <parameter/>
+                                        <parameter/>
+                                        <parameter>0</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..14.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.data[{#INT}]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Transmit</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>205c36ccab814a7aadc1b386ba74a4dd</uuid>
+                            <name>Bandwidth {#INT} Interval RX Change</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.interval.rx.change]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>SIMPLE_CHANGE</type>
+                                    <parameters>
+                                        <parameter/>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.[{#INT}.day.rx]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Receive</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>0ab88992530f4fd6ad653f4467351c09</uuid>
+                            <name>Bandwidth {#INT} Interval TTL Change</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.interval.ttl.change]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>SIMPLE_CHANGE</type>
+                                    <parameters>
+                                        <parameter/>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.[{#INT}.day.ttl]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Total</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>39e6f8c866874168a2df6300ab33f692</uuid>
+                            <name>Bandwidth {#INT} Interval TX Change</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.interval.tx.change]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>SIMPLE_CHANGE</type>
+                                    <parameters>
+                                        <parameter/>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.[{#INT}.day.tx]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Transmit</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>765cd1c9540b4cacaf58a22014a5b15f</uuid>
+                            <name>Bandwidth {#INT} Month RX</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.month.rx]</key>
+                            <delay>0</delay>
+                            <history>365d</history>
+                            <trends>730d</trends>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>;</parameter>
+                                        <parameter>,</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>CSV_TO_JSON</type>
+                                    <parameters>
+                                        <parameter/>
+                                        <parameter/>
+                                        <parameter>0</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..9.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.data[{#INT}]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Receive</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>30cbc5c624394a8b90dfa1b67be52876</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])&gt;{$BANDWIDTH_MONTH_RX_ALERT}*.5</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])&lt;{$BANDWIDTH_MONTH_RX_ALERT}*.5</recovery_expression>
+                                    <name>Bandwidth {#INT} RX Monthly 50% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} RX Monthly 50% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_RX_ALERT} Mb</opdata>
+                                    <priority>INFO</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_MONTH_RX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert50</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>MonthRXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>97d33f0494624576b2a05c94ea9907cb</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])&gt;{$BANDWIDTH_MONTH_RX_ALERT}*.75</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])&lt;{$BANDWIDTH_MONTH_RX_ALERT}*.75</recovery_expression>
+                                    <name>Bandwidth {#INT} RX Monthly 75% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} RX Monthly 75% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_RX_ALERT} Mb</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {#INT}
+
+Current Bandwidth: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_MONTH_RX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert75</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>MonthRXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>cce775a14ea7482b99054433518f4f6b</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])&gt;{$BANDWIDTH_MONTH_RX_ALERT}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.rx])&lt;{$BANDWIDTH_MONTH_RX_ALERT}</recovery_expression>
+                                    <name>Bandwidth {#INT} RX Monthly 100% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} RX Monthly 100% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_RX_ALERT} Mb</opdata>
+                                    <priority>HIGH</priority>
+                                    <description>System: {HOST.HOST} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_MONTH_RX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert100</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>MonthRXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>5144e8849623427183ca768ddf2a1dac</uuid>
+                            <name>Bandwidth {#INT} Month TTL</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.month.ttl]</key>
+                            <delay>0</delay>
+                            <history>365d</history>
+                            <trends>730d</trends>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>;</parameter>
+                                        <parameter>,</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>CSV_TO_JSON</type>
+                                    <parameters>
+                                        <parameter/>
+                                        <parameter/>
+                                        <parameter>0</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..11.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.data[{#INT}]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Total</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>e7b4ba927990420d9ed67e79f78ef6a5</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])&gt;{$BANDWIDTH_MONTH_TTL_ALERT}*.5</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])&lt;{$BANDWIDTH_MONTH_TTL_ALERT}*.5</recovery_expression>
+                                    <name>Bandwidth {#INT} TTL Monthly 50% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TTL Monthly 50% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_TTL_ALERT} Mb</opdata>
+                                    <priority>INFO</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_MONTH_TTL_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert50</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>MonthTTLLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>60a0f295581042a5b3e96ead86a91148</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])&gt;{$BANDWIDTH_MONTH_TTL_ALERT}*.75</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])&lt;{$BANDWIDTH_MONTH_TTL_ALERT}*.75</recovery_expression>
+                                    <name>Bandwidth {#INT} TTL Monthly 75% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TTL Monthly 75% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {#INT}
+
+Current Bandwidth: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_MONTH_TTL_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert75</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>MonthTTLLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>1d4997f5fb984538aa35c1fd8f214c5c</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])&gt;{$BANDWIDTH_MONTH_TTL_ALERT}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.ttl])&lt;{$BANDWIDTH_MONTH_TTL_ALERT}</recovery_expression>
+                                    <name>Bandwidth {#INT} TTL Monthly 100% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TTL Monthly 100% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_DAY_TTL_ALERT} Mb</opdata>
+                                    <priority>HIGH</priority>
+                                    <description>System: {HOST.HOST} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_MONTH_TTL_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert100</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>MonthTTLLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>655427b3eeb3460eaa3d96643abab8fd</uuid>
+                            <name>Bandwidth {#INT} Month TX</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.month.tx]</key>
+                            <delay>0</delay>
+                            <history>365d</history>
+                            <trends>730d</trends>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>STR_REPLACE</type>
+                                    <parameters>
+                                        <parameter>;</parameter>
+                                        <parameter>,</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>CSV_TO_JSON</type>
+                                    <parameters>
+                                        <parameter/>
+                                        <parameter/>
+                                        <parameter>0</parameter>
+                                    </parameters>
+                                </step>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <parameters>
+                                        <parameter>$..10.first()</parameter>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.data[{#INT}]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Transmit</value>
+                                </tag>
+                            </tags>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <uuid>5143974fe3d4458eb881782499837c71</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])&gt;{$BANDWIDTH_MONTH_TX_ALERT}*.5</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])&lt;{$BANDWIDTH_MONTH_TX_ALERT}*.5</recovery_expression>
+                                    <name>Bandwidth {#INT} TX Monthly 50% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TX Monthly 50% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_TX_ALERT} Mb</opdata>
+                                    <priority>INFO</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_MONTH_TX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert50</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>MonthTXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>1509ef2050114189a18aba09f596ae70</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])&gt;{$BANDWIDTH_MONTH_TX_ALERT}*.75</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])&lt;{$BANDWIDTH_MONTH_TX_ALERT}*.75</recovery_expression>
+                                    <name>Bandwidth {#INT} TX Monthly 75% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TX Monthly 75% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_TX_ALERT} Mb</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>System: {HOSTNAME} 
+Interface {#INT}
+
+Current Bandwidth: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_MONTH_TX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert75</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>MonthTXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <uuid>03c57af08180404fa9c227756c361a9e</uuid>
+                                    <expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])&gt;{$BANDWIDTH_MONTH_TX_ALERT}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>last(/Bandwidth by vnstat - Active Agent/bandwidth.vnstat.[{#INT}.month.tx])&lt;{$BANDWIDTH_MONTH_TX_ALERT}</recovery_expression>
+                                    <name>Bandwidth {#INT} TX Monthly 100% Limit Exceeded</name>
+                                    <event_name>Bandwidth {#INT} TX Monthly 100% Limit Exceeded</event_name>
+                                    <opdata>{ITEM.LASTVALUE1} / {$BANDWIDTH_MONTH_TX_ALERT} Mb</opdata>
+                                    <priority>HIGH</priority>
+                                    <description>System: {HOST.HOST} 
+Interface {EVENT.TAGS.BandwidthInt} 
+
+
+Current Bandwidth RX: {ITEM.VALUE1}
+Limit: {$BANDWIDTH_MONTH_TX_ALERT}</description>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>Alert100</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Bandwidth</tag>
+                                            <value>MonthTXLimit</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>BandwidthInt</tag>
+                                            <value>{#INT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>7ae800e0a3b74be3b18add8a2b3f0875</uuid>
+                            <name>Bandwidth {#INT} Per Second RX Change</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.sec.rx.change]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <parameters>
+                                        <parameter/>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.[{#INT}.day.rx]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Receive</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>3117e0ecb99d40c2b3fc0163943caa9f</uuid>
+                            <name>Bandwidth {#INT} Per Second TTL Change</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.sec.ttl.change]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <parameters>
+                                        <parameter/>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.[{#INT}.day.ttl]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Total</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                        <item_prototype>
+                            <uuid>804d996d8a234dd3857588096fec3f6a</uuid>
+                            <name>Bandwidth {#INT} Per Second TX Change</name>
+                            <type>DEPENDENT</type>
+                            <key>bandwidth.vnstat.[{#INT}.sec.tx.change]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <units>b</units>
+                            <preprocessing>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <parameters>
+                                        <parameter/>
+                                    </parameters>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>bandwidth.vnstat.[{#INT}.day.tx]</key>
+                            </master_item>
+                            <tags>
+                                <tag>
+                                    <tag>Bandwidth</tag>
+                                    <value>Transmit</value>
+                                </tag>
+                            </tags>
+                        </item_prototype>
+                    </item_prototypes>
+                    <graph_prototypes>
+                        <graph_prototype>
+                            <uuid>c8f70cc65f2d411da0690e3e29963f3b</uuid>
+                            <name>All time {#INT} Bandiwdth</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.ever.tx]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.ever.rx]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>A54F10</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.ever.ttl]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>e83d39fdf9174e89952fab0c19ea3c84</uuid>
+                            <name>All time {#INT} Bandiwdth RX</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.ever.rx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>b8edc18cde4b4e7689df2a6ce7fa0db2</uuid>
+                            <name>All time {#INT} Bandiwdth Stacked</name>
+                            <type>STACKED</type>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>0040FF</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.ever.tx]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.ever.rx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>4d2403704d9946ccbc1fedde00a9beae</uuid>
+                            <name>All time {#INT} Bandiwdth TTL</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>A54F10</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.ever.ttl]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>c7fb5fcddde84833a945ad1e648669f0</uuid>
+                            <name>All time {#INT} Bandiwdth TX</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.ever.tx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>f3a1803efe014959b51be380f2888746</uuid>
+                            <name>Daily {#INT} Bandiwdth</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.day.rx]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>26A69A</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.day.ttl]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>2774A4</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.day.tx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>d32fd4f52268466c9b7b9ca56982382d</uuid>
+                            <name>Daily {#INT} Bandiwdth RX</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.day.rx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>4c527574857a40e4951d95f10c06b1c3</uuid>
+                            <name>Daily {#INT} Bandiwdth Stacked</name>
+                            <type>STACKED</type>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.day.rx]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>2774A4</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.day.tx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>0cb226269fc542eeb8c5b3f6db8047fb</uuid>
+                            <name>Daily {#INT} Bandiwdth TTL</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>A54F10</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.day.ttl]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>c5e1f35a4706413291e8d17704acc8db</uuid>
+                            <name>Daily {#INT} Bandiwdth TX</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.day.tx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>8d274834da614680a70208f1c4c6f002</uuid>
+                            <name>Interval {#INT} Bandiwdth Change Stacked</name>
+                            <type>STACKED</type>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>0040FF</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.interval.rx.change]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>FF0000</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.interval.tx.change]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>ca47dabcc282457e8be2e568e9635923</uuid>
+                            <name>Inteval {#INT} Bandiwdth Change</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>A54F10</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.interval.rx.change]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>FC6EA3</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.interval.ttl.change]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>6C59DC</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.interval.tx.change]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>e4c2742e0eb54926bb79c69d88489523</uuid>
+                            <name>Monthly {#INT} Bandiwdth</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.month.tx]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.month.rx]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>2774A4</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.ever.ttl]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>c5fe94d998b74a35a6e0e192cc2c81f0</uuid>
+                            <name>Monthly {#INT} Bandiwdth RX</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.month.rx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>87d50189c85142a8b506e4dd0f901dee</uuid>
+                            <name>Monthly {#INT} Bandiwdth Stacked</name>
+                            <type>STACKED</type>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>0040FF</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.month.tx]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.month.rx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>625aca417f134207a508e7bc5f792ada</uuid>
+                            <name>Monthly {#INT} Bandiwdth TTL</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>A54F10</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.month.ttl]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>fad53b8fe5b3436cb6810c72dfb796c1</uuid>
+                            <name>Monthly {#INT} Bandiwdth TX</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.month.tx]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>8be38674678546baa317297df40a0687</uuid>
+                            <name>Per Second {#INT} Bandiwdth Change</name>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>A54F10</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.sec.rx.change]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>FC6EA3</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.sec.ttl.change]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>6C59DC</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.sec.tx.change]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <uuid>7a120f7f5d704347be2c96ae9d65fc53</uuid>
+                            <name>Per Second {#INT} Bandiwdth Change Stacked</name>
+                            <type>STACKED</type>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>0040FF</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.sec.tx.change]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>FF0000</color>
+                                    <item>
+                                        <host>Bandwidth by vnstat - Active Agent</host>
+                                        <key>bandwidth.vnstat.[{#INT}.sec.rx.change]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                    </graph_prototypes>
+                    <master_item>
+                        <key>bandwidth.vnstat.discovery</key>
+                    </master_item>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$BANDWIDTH_DAY_RX_ALERT}</macro>
+                    <value>99999999999</value>
+                    <description>Trigger alert when interface total daily receive bandwidth exceeds (b)</description>
+                </macro>
+                <macro>
+                    <macro>{$BANDWIDTH_DAY_TTL_ALERT}</macro>
+                    <value>99999999999</value>
+                    <description>Trigger alert when interface total daily bandwidth exceeds (b)</description>
+                </macro>
+                <macro>
+                    <macro>{$BANDWIDTH_DAY_TX_ALERT}</macro>
+                    <value>99999999999</value>
+                    <description>Trigger alert when interface total daily transmit bandwidth exceeds (b)</description>
+                </macro>
+                <macro>
+                    <macro>{$BANDWIDTH_EVER_RX_ALERT}</macro>
+                    <value>99999999999</value>
+                    <description>Trigger alert when interface total receive bandwidth exceeds (b)</description>
+                </macro>
+                <macro>
+                    <macro>{$BANDWIDTH_EVER_TTL_ALERT}</macro>
+                    <value>99999999999</value>
+                    <description>Trigger alert when interface total bandwidth exceeds  (b)</description>
+                </macro>
+                <macro>
+                    <macro>{$BANDWIDTH_EVER_TX_ALERT}</macro>
+                    <value>99999999999</value>
+                    <description>Trigger alert when interface total transmit bandwidth exceeds (b)</description>
+                </macro>
+                <macro>
+                    <macro>{$BANDWIDTH_MONTH_RX_ALERT}</macro>
+                    <value>999999999999</value>
+                    <description>Trigger alert when interface total monthly receive bandwidth exceeds (b)</description>
+                </macro>
+                <macro>
+                    <macro>{$BANDWIDTH_MONTH_TTL_ALERT}</macro>
+                    <value>999999999999</value>
+                    <description>Trigger alert when interface total monthly bandwidth exceeds (b)</description>
+                </macro>
+                <macro>
+                    <macro>{$BANDWIDTH_MONTH_TX_ALERT}</macro>
+                    <value>999999999999</value>
+                    <description>Trigger alert when interface total monthly transmit bandwidth exceeds (b)</description>
+                </macro>
+            </macros>
+            <dashboards>
+                <dashboard>
+                    <uuid>4e0c8359eab64f1793a374a8553e7f7f</uuid>
+                    <name>Bandwidth over Time</name>
+                    <pages>
+                        <page>
+                            <name>Bandwidth Totals</name>
+                            <widgets>
+                                <widget>
+                                    <type>GRAPH_PROTOTYPE</type>
+                                    <name>Bandwidth Stacked - Daily</name>
+                                    <width>19</width>
+                                    <height>5</height>
+                                    <fields>
+                                        <field>
+                                            <type>GRAPH_PROTOTYPE</type>
+                                            <name>graphid</name>
+                                            <value>
+                                                <name>Daily {#INT} Bandiwdth Stacked</name>
+                                                <host>Bandwidth by vnstat - Active Agent</host>
+                                            </value>
+                                        </field>
+                                    </fields>
+                                </widget>
+                                <widget>
+                                    <type>GRAPH_PROTOTYPE</type>
+                                    <name>Bandwidth Stacked - Ever</name>
+                                    <y>10</y>
+                                    <width>19</width>
+                                    <height>5</height>
+                                    <fields>
+                                        <field>
+                                            <type>GRAPH_PROTOTYPE</type>
+                                            <name>graphid</name>
+                                            <value>
+                                                <name>All time {#INT} Bandiwdth Stacked</name>
+                                                <host>Bandwidth by vnstat - Active Agent</host>
+                                            </value>
+                                        </field>
+                                    </fields>
+                                </widget>
+                                <widget>
+                                    <type>GRAPH_PROTOTYPE</type>
+                                    <name>Banwidth Stacked - Monthly</name>
+                                    <y>5</y>
+                                    <width>19</width>
+                                    <height>5</height>
+                                    <fields>
+                                        <field>
+                                            <type>GRAPH_PROTOTYPE</type>
+                                            <name>graphid</name>
+                                            <value>
+                                                <name>Monthly {#INT} Bandiwdth Stacked</name>
+                                                <host>Bandwidth by vnstat - Active Agent</host>
+                                            </value>
+                                        </field>
+                                    </fields>
+                                </widget>
+                            </widgets>
+                        </page>
+                        <page>
+                            <name>Bandwidth Change</name>
+                            <widgets>
+                                <widget>
+                                    <type>GRAPH_PROTOTYPE</type>
+                                    <width>23</width>
+                                    <height>4</height>
+                                    <fields>
+                                        <field>
+                                            <type>GRAPH_PROTOTYPE</type>
+                                            <name>graphid</name>
+                                            <value>
+                                                <name>Inteval {#INT} Bandiwdth Change</name>
+                                                <host>Bandwidth by vnstat - Active Agent</host>
+                                            </value>
+                                        </field>
+                                    </fields>
+                                </widget>
+                                <widget>
+                                    <type>GRAPH_PROTOTYPE</type>
+                                    <y>4</y>
+                                    <width>23</width>
+                                    <height>5</height>
+                                    <fields>
+                                        <field>
+                                            <type>GRAPH_PROTOTYPE</type>
+                                            <name>graphid</name>
+                                            <value>
+                                                <name>Interval {#INT} Bandiwdth Change Stacked</name>
+                                                <host>Bandwidth by vnstat - Active Agent</host>
+                                            </value>
+                                        </field>
+                                    </fields>
+                                </widget>
+                                <widget>
+                                    <type>GRAPH_PROTOTYPE</type>
+                                    <y>9</y>
+                                    <width>23</width>
+                                    <height>5</height>
+                                    <fields>
+                                        <field>
+                                            <type>GRAPH_PROTOTYPE</type>
+                                            <name>graphid</name>
+                                            <value>
+                                                <name>Per Second {#INT} Bandiwdth Change</name>
+                                                <host>Bandwidth by vnstat - Active Agent</host>
+                                            </value>
+                                        </field>
+                                    </fields>
+                                </widget>
+                                <widget>
+                                    <type>GRAPH_PROTOTYPE</type>
+                                    <y>14</y>
+                                    <width>23</width>
+                                    <height>5</height>
+                                    <fields>
+                                        <field>
+                                            <type>GRAPH_PROTOTYPE</type>
+                                            <name>graphid</name>
+                                            <value>
+                                                <name>Per Second {#INT} Bandiwdth Change Stacked</name>
+                                                <host>Bandwidth by vnstat - Active Agent</host>
+                                            </value>
+                                        </field>
+                                    </fields>
+                                </widget>
+                            </widgets>
+                        </page>
+                    </pages>
+                </dashboard>
+            </dashboards>
+        </template>
+    </templates>
+</zabbix_export>
