@@ -60,21 +60,52 @@ For each host, edit the inherited macro's to set the appropriate bandwidth limit
 Reminder that the default configuration for vnstat is to query the network interfaces every 60 seconds but update the back-end database only every 5 minutes.  Consequently, Zabbix-Agent will receive updated bandwidth data from vnstat only every 5 minutes.  It may be appropriate to update the query time for the Bandwidth items to match the vnstat database update, or modify the vnstat configuration to update the back-end database every 60 seconds.
 
 ## Screenshots
-Dashboard Screenshot (Daily Bandwidth Stacked)
+Dashboard Screenshot (Daily Bandwidth Stacked) (1 Day)
 ![](images/screenshot1.png)
 
-Dashboard Screenshot (Monthly Bandwidth Stacked)
+Dashboard Screenshot (Monthly Bandwidth Stacked) (1 Day)
 ![](images/Screenshot2.png)
 
 Problem Alert Showing Bandwidth Limits (Operational Data)
 ![](images/Screenshot3.png)
 
+Dashboard Screenshot (Daily Bandwidth Stacked) ( 3 months)
+![](images/screenshot4.png)
+
+Dashboard Screenshot (Monthly Bandwidth Stacked) ( 3 months)
+![](images/screenshot5.png)
+
+Dashboard Screenshot (All Time Bandwidth Stacked) (6 months)
+![](images/screenshot6.png)
+
+Dashboard Screenshot (Interval Bandwidth Change) (7 days)
+![](images/screenshot7.png)
+
+Dashboard Screenshot (Per Second Bandwidth Change Stacked) (3 Months)
+![](images/screenshot8.png)
+
+Discovery Item Prototypes
+![](images/screenshot9.png)
+
+Discovery Graph Prototypes
+![](images/screenshot10.png)
+
+Sample Triggered Alert Email
+![](images/screenshot11.png)
+
+Trigger Macros 
+![](images/screenshot12.png)
+
+--------
+
 ## Updates
+
 ### October 1, 2021
 - bug fixes
 
 ### November 17, 2021
 - Added XML for pre 5.4
+- Added screenshots to repo
 
 ## Known Issues
 - LLD does not filter for invalid interface names.  This will be addressed in future release
